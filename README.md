@@ -155,6 +155,244 @@ For any other issues, consult the project documentation or raise an issue in the
 
 ---
 
+# API Documentation
+
+## Base URL
+
+/api
+
+## Routes
+
+### `/students`
+
+#### GET `/students`
+
+- **Description:** Fetch all students.
+- **Response:**
+  - `200 OK`: Returns a list of all students.
+
+### `/teachers`
+
+#### GET `/teachers`
+
+- **Description:** Fetch all teachers.
+- **Response:**
+  - `200 OK`: Returns a list of all teachers.
+
+#### POST `/teachers`
+
+- **Description:** Register a new teacher.
+- **Request Body:**
+  ```
+  {
+    "name": "string",
+    "email": "string",
+    "password": "string"
+  }
+  ```
+- **Response:**
+  - `200 OK`: Returns the ID, name, and email of the newly created teacher.
+  - `400 Bad Request`: Returns error details if the request body is invalid.
+  - `500 Internal Server Error`: Returns error details if the server fails to create the teacher.
+
+#### POST `/teachers/login`
+
+- **Description:** Authenticate a teacher.
+- **Request Body:**
+  ```
+  {
+    "email": "string",
+    "password": "string"
+  }
+  ```
+- **Response:**
+  - `200 OK`: Returns a success message if authentication is successful.
+  - `401 Unauthorized`: Returns error details if authentication fails.
+  - `500 Internal Server Error`: Returns error details if the server fails to authenticate.
+
+### `/tests`
+
+#### GET `/tests`
+
+- **Description:** Fetch all tests or tests created by a specific user.
+- **Query Parameters:**
+  - `createdBy` (optional): Filter tests by the creator's ID.
+- **Response:**
+  - `200 OK`: Returns a list of tests.
+  - `500 Internal Server Error`: Returns error details if the server fails to fetch tests.
+
+#### POST `/tests`
+
+- **Description:** Create a new test.
+- **Request Body:**
+  ```
+  {
+    "title": "string"
+  }
+  ```
+- **Query Parameters:**
+  - `createdBy`: ID of the user creating the test.
+- **Response:**
+  - `200 OK`: Returns the ID of the newly created test.
+  - `400 Bad Request`: Returns error details if `createdBy` is missing or the request body is invalid.
+  - `500 Internal Server Error`: Returns error details if the server fails to create the test.
+
+#### DELETE `/tests`
+
+- **Description:** Delete a test.
+- **Query Parameters:**
+  - `testId`: ID of the test to be deleted.
+- **Response:**
+  - `200 OK`: Returns a success message if the test is deleted successfully.
+  - `400 Bad Request`: Returns error details if `testId` is missing or invalid.
+  - `404 Not Found`: Returns error details if the test is not found.
+  - `500 Internal Server Error`: Returns error details if the server fails to delete the test.
+
+### `/tests/questions`
+
+#### GET `/tests/questions`
+
+- **Description:** Fetch all questions or questions for a specific test.
+- **Query Parameters:**
+  - `testId` (optional): Filter questions by test ID.
+- **Response:**
+  - `200 OK`: Returns a list of questions.
+  - `500 Internal Server Error`: Returns error details if the server fails to fetch questions.
+
+#### POST `/tests/questions`
+
+- **Description:** Create a new question.
+- **Request Body:**
+  ```
+  {
+    "questionText": "string",
+    "optionA": "string",
+    "optionB": "string",
+    "optionC": "string",
+    "optionD": "string",
+    "answerKey": "A" | "B" | "C" | "D"
+  }
+  ```
+- **Query Parameters:**
+  - `testId`: ID of the test to which the question belongs.
+- **Response:**
+  - `200 OK`: Returns the ID of the newly created question.
+  - `400 Bad Request`: Returns error details if `testId` is missing or the request body is invalid.
+  - `500 Internal Server Error`: Returns error details if the server fails to create the question.
+
+#### PUT `/tests/questions`
+
+- **Description:** Update an existing question.
+- **Request Body:**
+  ```
+  {
+    "questionText": "string",
+    "optionA": "string",
+    "optionB": "string",
+    "optionC": "string",
+    "optionD": "string",
+    "answerKey": "A" | "B" | "C" | "D"
+  }
+  ```
+- **Query Parameters:**
+  - `questionId`: ID of the question to be updated.
+- **Response:**
+  - `200 OK`: Returns the updated question details.
+  - `400 Bad Request`: Returns error details if `questionId` is missing or the request body is invalid.
+  - `500 Internal Server Error`: Returns error details if the server fails to update the question.
+
+#### DELETE `/tests/questions`
+
+- **Description:** Delete a question.
+- **Query Parameters:**
+  - `questionId`: ID of the question to be deleted.
+- **Response:**
+  - `200 OK`: Returns a success message if the question is deleted successfully.
+  - `400 Bad Request`: Returns error details if `questionId` is missing or invalid.
+  - `404 Not Found`: Returns error details if the question is not found.
+  - `500 Internal Server Error`: Returns error details if the server fails to delete the question.
+
+### `/tests/createresponse`
+
+#### GET `/tests/createresponse`
+
+- **Description:** Create or fetch a test response for a student.
+- **Query Parameters:**
+  - `testId`: ID of the test.
+  - `studentId`: ID of the student.
+- **Response:**
+  - `200 OK`: Returns the ID of the created or existing test response.
+  - `400 Bad Request`: Returns error details if `testId` or `studentId` is missing.
+  - `500 Internal Server Error`: Returns error details if the server fails to create or fetch the test response.
+
+### `/tests/questionresponse`
+
+#### GET `/tests/questionresponse`
+
+- **Description:** Fetch all question responses.
+- **Response:**
+  - `200 OK`: Returns a list of all question responses.
+  - `500 Internal Server Error`: Returns error details if the server fails to fetch question responses.
+
+### `/tests/testresponse`
+
+#### GET `/tests/testresponse`
+
+- **Description:** Fetch a specific test response with its question responses and correctness.
+- **Query Parameters:**
+  - `responseId`: ID of the test response.
+- **Response:**
+  - `200 OK`: Returns the test response details, including correctness of each question.
+  - `400 Bad Request`: Returns error details if `responseId` is missing.
+  - `404 Not Found`: Returns error details if the test response is not found.
+  - `500 Internal Server Error`: Returns error details if the server fails to fetch the test response details.
+
+### `/tests/registerresponse`
+
+#### POST `/tests/registerresponse`
+
+- **Description:** Register or update a question response.
+- **Request Body:**
+  ```
+  {
+    "selectedOption": "A" | "B" | "C" | "D"
+  }
+  ```
+- **Query Parameters:**
+  - `responseId`: ID of the test response.
+  - `questionId`: ID of the question.
+- **Response:**
+  - `200 OK`: Returns a success message if the response is registered or updated successfully.
+  - `400 Bad Request`: Returns error details if `responseId` or `questionId` is missing.
+  - `500 Internal Server Error`: Returns error details if the server fails to register or update the response.
+
+### `/tests/testresponses`
+
+#### GET `/tests/testresponses`
+
+- **Description:** Fetch test responses with details for a specific test.
+- **Query Parameters:**
+  - `testId`: ID of the test.
+- **Response:**
+  - `200 OK`: Returns a list of test responses with student details and correctness.
+  - `400 Bad Request`: Returns error details if `testId` is missing or invalid.
+  - `404 Not Found`: Returns error details if no test responses are found.
+  - `500 Internal Server Error`: Returns error details if the server fails to fetch test responses.
+
+### `/tests/answerkey`
+
+#### GET `/tests/answerkey`
+
+- **Description:** Fetch the answer key for a specific test response.
+- **Query Parameters:**
+  - `responseId`: ID of the test response.
+- **Response:**
+  - `200 OK`: Returns the answer key with selected options for the test response.
+  - `400 Bad Request`: Returns error details if `responseId` is missing or invalid.
+  - `404 Not Found`: Returns error details if the test response is not found.
+  - `500 Internal Server Error`: Returns error details if the server fails to fetch the answer key.
+
+
 ### License
 
 [MIT License](LICENSE)
