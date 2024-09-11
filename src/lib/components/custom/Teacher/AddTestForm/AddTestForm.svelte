@@ -121,6 +121,7 @@
 
   <!-- Submit button -->
   <div class="flex justify-start">
-    <Form.Button type="submit" class="form-button">Submit</Form.Button>
+    <Form.Button type="submit" class="form-button mr-2">Submit</Form.Button>
+    <a href="/teacher/dashboard">Cancel</a>
   </div>
 </form>

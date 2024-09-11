@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { db } from "../../../db";
-import { test, question, testResponse, questionResponse } from "../../../schema";
+import { test, question, testResponse, questionResponse, student } from "../../../schema";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { and, eq } from "drizzle-orm";
@@ -312,5 +312,129 @@ tests.post("/registerresponse", zValidator("json", responseSchema), async (c) =>
     return c.json({ error: "Failed to register or update response." }, 500);
   }
 });
+
+// Fetch test responses with details
+tests.get("/testresponses", async (c) => {
+  try {
+    const testId = c.req.query("testId");
+
+    if (!testId || isNaN(Number(testId))) {
+      return c.json({ error: "Valid testId query is required." }, 400);
+    }
+
+    // Fetch test responses
+    const testResponses = await db
+      .select()
+      .from(testResponse)
+      .where(eq(testResponse.testId, Number(testId)));
+    
+    if (testResponses.length === 0) {
+      return c.json({ message: "No test responses found for the provided testId." }, 404);
+    }
+
+    // Fetch all questions for the test
+    const questions = await db
+      .select()
+      .from(question)
+      .where(eq(question.testId, Number(testId)));
+
+    // Map question ids to their correct answers
+    const questionMap = new Map();
+    questions.forEach(q => questionMap.set(q.id, q.answerKey));
+
+    // Prepare responses
+    const results = await Promise.all(testResponses.map(async (tr) => {
+      // Fetch student details
+      const studentDetails = await db
+        .select()
+        .from(student)
+        .where(eq(student.id, Number(tr.studentId)))
+        .then(rows => rows[0]);
+
+      // Fetch question responses for this test response
+      const questionResponses = await db
+        .select()
+        .from(questionResponse)
+        .where(eq(questionResponse.responseId, tr.id));
+
+      // Calculate correct answers
+      const correctCount = questionResponses.reduce((count, qr) => {
+        const correctAnswer = questionMap.get(qr.questionId);
+        return qr.selectedOption === correctAnswer ? count + 1 : count;
+      }, 0);
+
+      return {
+        id: tr.id,
+        studentName: studentDetails ? studentDetails.name : "Unknown",
+        correct: correctCount,
+        totalQuestions: questions.length
+      };
+    }));
+
+    return c.json(results);
+  } catch (error) {
+    console.error("Error fetching test responses:", error);
+    return c.json({ error: "Failed to fetch test responses." }, 500);
+  }
+});
+
+// Route to get the answer key for a specific response
+tests.get("/answerkey", async (c) => {
+  try {
+    const responseId = c.req.query("responseId");
+
+    // Check if responseId is provided and is a valid number
+    if (!responseId || isNaN(Number(responseId))) {
+      return c.json({ error: "Valid responseId query is required." }, 400);
+    }
+
+    // Fetch the testId associated with the responseId
+    const testResponseData = await db
+      .select()
+      .from(testResponse)
+      .where(eq(testResponse.id, Number(responseId)))
+      .then(rows => rows[0]);
+
+    if (!testResponseData) {
+      return c.json({ error: "Test response not found." }, 404);
+    }
+
+    const testId = testResponseData.testId;
+
+    // Fetch all questions for the test
+    const questions = await db
+      .select()
+      .from(question)
+      .where(eq(question.testId, Number(testId)));
+
+    // Fetch the selected options for each question
+    const selectedOptions = await db
+      .select()
+      .from(questionResponse)
+      .where(eq(questionResponse.responseId, Number(responseId)));
+
+    // Create a map of selected options by questionId
+    const selectedOptionsMap = selectedOptions.reduce((acc, curr) => {
+      acc[curr.questionId] = curr.selectedOption;
+      return acc;
+    }, {});
+
+    // Prepare the answer key data
+    const answerKey = questions.map(q => ({
+      questionId: q.id,
+      questionText: q.questionText,
+      correctOption: q.answerKey,
+      selectedOption: selectedOptionsMap[q.id] || null // Include selectedOption or null if not found
+    }));
+
+    return c.json(answerKey);
+  } catch (error) {
+    console.error("Error fetching answer key:", error);
+    return c.json({ error: "Failed to fetch answer key." }, 500);
+  }
+});
+
+
+
 
 export default tests;
