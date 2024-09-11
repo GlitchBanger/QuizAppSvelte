@@ -391,8 +391,3 @@ For any other issues, consult the project documentation or raise an issue in the
   - `400 Bad Request`: Returns error details if `responseId` is missing or invalid.
   - `404 Not Found`: Returns error details if the test response is not found.
   - `500 Internal Server Error`: Returns error details if the server fails to fetch the answer key.
-
-
-### License
-
-[MIT License](LICENSE)
